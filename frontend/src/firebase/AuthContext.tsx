@@ -11,7 +11,7 @@ import { auth } from './config';
 // Allowed emails - add your email(s) here
 // Leave empty to allow any authenticated user
 const ALLOWED_EMAILS: string[] = [
-  // 'your-email@gmail.com',
+  'wastrilith@gmail.com',
 ];
 
 interface AuthContextType {
