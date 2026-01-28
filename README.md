@@ -49,7 +49,7 @@ See [Credential Setup](#credential-setup) below for detailed instructions for ea
 1. Open the imported workflow
 2. Click on the **Webhook** node
 3. Copy the **Production URL** (or Test URL for development)
-4. The URL format is: `https://n8n.wastrilith2k.net/webhook/search`
+4. The URL format is: `https://your-n8n-instance.com/webhook/search`
 
 ### 4. Start Frontend
 
@@ -91,7 +91,7 @@ All three Google services use the same OAuth2 credential.
    - Go to **APIs & Services** → **Credentials**
    - Click **Create Credentials** → **OAuth client ID**
    - Application type: **Web application**
-   - Add authorized redirect URI: `https://n8n.wastrilith2k.net/rest/oauth2-credential/callback`
+   - Add authorized redirect URI: `https://your-n8n-instance.com/rest/oauth2-credential/callback`
    - Copy **Client ID** and **Client Secret**
 
 4. **Add to n8n**
@@ -115,7 +115,7 @@ All three Google services use the same OAuth2 credential.
    - Go to [Azure Portal](https://portal.azure.com/)
    - Navigate to **Azure Active Directory** → **App registrations**
    - Click **New registration**
-   - Set redirect URI: `https://n8n.wastrilith2k.net/rest/oauth2-credential/callback`
+   - Set redirect URI: `https://your-n8n-instance.com/rest/oauth2-credential/callback`
 
 2. **Configure API Permissions**
    - Go to **API permissions** → **Add a permission**
@@ -147,15 +147,15 @@ All three Google services use the same OAuth2 credential.
 
 2. **Generate Token**
    - Visit: `https://trello.com/1/authorize?expiration=never&scope=read&response_type=token&key=YOUR_API_KEY`
+   - Replace `YOUR_API_KEY` with your actual API key
    - Authorize and copy the token
 
-3. **Add to n8n**
-   - In the workflow, Trello credentials are passed as query parameters
-   - Set environment variables in n8n:
-     - `TRELLO_API_KEY`: your API key
-     - `TRELLO_TOKEN`: your token
-
-   Or edit the Trello Search node to use hardcoded values.
+3. **Update Workflow**
+   - Before importing, edit `n8n-workflow.json`
+   - Find and replace:
+     - `YOUR_TRELLO_API_KEY` → your actual API key
+     - `YOUR_TRELLO_TOKEN` → your actual token
+   - Or edit the Trello Search node in n8n after importing
 
 ---
 
@@ -166,7 +166,7 @@ All three Google services use the same OAuth2 credential.
 Create a `.env` file in the `frontend` directory:
 
 ```env
-VITE_N8N_WEBHOOK_URL=https://n8n.wastrilith2k.net/webhook/search
+VITE_N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/search
 ```
 
 ### Development
@@ -194,12 +194,12 @@ The built files will be in `frontend/dist/`.
 
 ```bash
 # Basic search
-curl -X POST https://n8n.wastrilith2k.net/webhook/search \
+curl -X POST https://your-n8n-instance.com/webhook/search \
   -H "Content-Type: application/json" \
   -d '{"query": "meeting notes"}'
 
 # Test locally
-curl -X POST https://n8n.wastrilith2k.net/webhook/search \
+curl -X POST https://your-n8n-instance.com/webhook/search \
   -H "Content-Type: application/json" \
   -d '{"query": "project plan"}'
 ```
@@ -297,7 +297,7 @@ If you want to run n8n locally via Docker:
 docker-compose up -d
 ```
 
-n8n will be available at https://n8n.wastrilith2k.net
+n8n will be available at https://your-n8n-instance.com
 
 See `docker-compose.yml` for configuration options.
 
