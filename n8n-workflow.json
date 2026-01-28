@@ -66,7 +66,7 @@
       "position": [32, -32],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "eaovhjNZUg7rdsYc",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       },
@@ -150,7 +150,7 @@
       "position": [32, 336],
       "credentials": {
         "gmailOAuth2": {
-          "id": "1Ecw47xhezKF5tiA",
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
           "name": "Gmail account"
         }
       },
@@ -184,7 +184,7 @@
       "position": [32, 560],
       "credentials": {
         "oAuth2Api": {
-          "id": "EifYtXoVFWzsafAQ",
+          "id": "YOUR_ONEDRIVE_CREDENTIAL_ID",
           "name": "OneDrive"
         }
       },
@@ -205,7 +205,7 @@
       "position": [32, 720],
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "XOcfTz46VcW1IIKq",
+          "id": "YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID",
           "name": "Google Calendar account"
         }
       },
@@ -265,7 +265,7 @@
       "position": [480, 720],
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "XOcfTz46VcW1IIKq",
+          "id": "YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID",
           "name": "Google Calendar account"
         }
       },
@@ -319,7 +319,7 @@
       "position": [480, 336],
       "credentials": {
         "gmailOAuth2": {
-          "id": "1Ecw47xhezKF5tiA",
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
           "name": "Gmail account"
         }
       },

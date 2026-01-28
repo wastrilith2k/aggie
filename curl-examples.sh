@@ -3,7 +3,7 @@
 # Example curl commands for testing the n8n webhook
 # Replace YOUR_N8N_URL with your actual n8n webhook URL
 
-N8N_URL="${N8N_WEBHOOK_URL:-https://n8n.wastrilith2k.net/webhook/search}"
+N8N_URL="${N8N_WEBHOOK_URL:-https://your-n8n-instance.com/webhook/search}"
 
 echo "Testing n8n webhook at: $N8N_URL"
 echo "---"
