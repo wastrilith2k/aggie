@@ -9,7 +9,9 @@ import {
   ErrorState,
   ThemeToggle,
 } from './components';
+import { Login } from './components/Login';
 import { useSearch } from './hooks/useSearch';
+import { AuthProvider, useAuth } from './firebase/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +23,7 @@ const queryClient = new QueryClient({
 });
 
 function SearchDashboard() {
+  const { user, signOut } = useAuth();
   const {
     query,
     setQuery,
@@ -111,7 +114,7 @@ function SearchDashboard() {
           <h1 className="text-xl font-semibold text-primary-900 dark:text-primary-100">
             Note Search
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <kbd className="hidden sm:inline-block px-2 py-1 text-xs
                            bg-primary-100 dark:bg-primary-800
                            text-primary-500 dark:text-primary-400
@@ -122,6 +125,24 @@ function SearchDashboard() {
               to search
             </span>
             <ThemeToggle />
+            {user && (
+              <div className="flex items-center gap-2">
+                {user.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt=""
+                    className="w-7 h-7 rounded-full"
+                  />
+                )}
+                <button
+                  onClick={signOut}
+                  className="text-xs text-primary-500 hover:text-primary-700
+                             dark:text-primary-400 dark:hover:text-primary-200"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -227,10 +248,30 @@ function SearchDashboard() {
   );
 }
 
+function AuthenticatedApp() {
+  const { user, loading, isAuthorized } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-50 dark:bg-primary-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isAuthorized) {
+    return <Login />;
+  }
+
+  return <SearchDashboard />;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchDashboard />
+      <AuthProvider>
+        <AuthenticatedApp />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

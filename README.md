@@ -54,17 +54,94 @@ See [Credential Setup](#credential-setup) below for detailed instructions for ea
 3. Copy the **Production URL** (or Test URL for development)
 4. The URL format is: `https://your-n8n-instance.com/webhook/search`
 
-### 4. Start Frontend
+### 4. Deploy Frontend
 
+The frontend uses Firebase for authentication and hosting. See [Firebase Setup](#firebase-setup) for deployment instructions.
+
+For local development:
 ```bash
 cd frontend
 cp .env.example .env
-# Edit .env and set VITE_N8N_WEBHOOK_URL to your webhook URL
+# Edit .env and set your n8n webhook URL and Firebase config
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.
+Open http://localhost:5173 in your browser.
+
+---
+
+## Firebase Setup
+
+The frontend uses Firebase Authentication (Google sign-in) and Firebase Hosting.
+
+### 1. Create Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click **Add project**
+3. Name your project and follow the setup wizard
+
+### 2. Enable Authentication
+
+1. In Firebase Console, go to **Authentication** → **Sign-in method**
+2. Enable **Google** as a sign-in provider
+3. Configure the OAuth consent screen if prompted
+
+### 3. Register Web App
+
+1. In Firebase Console, go to **Project Settings** → **Your apps**
+2. Click the web icon (`</>`) to add a web app
+3. Register the app (enable Firebase Hosting when prompted)
+4. Copy the Firebase config values
+
+### 4. Configure Frontend
+
+Create `frontend/.env` with your values:
+```env
+VITE_N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/search
+
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+```
+
+### 5. Restrict Access (Optional)
+
+To limit who can use the app, edit `frontend/src/firebase/AuthContext.tsx`:
+```typescript
+const ALLOWED_EMAILS: string[] = [
+  'your-email@gmail.com',
+  'another-allowed@gmail.com',
+];
+```
+
+Leave the array empty to allow any authenticated Google user.
+
+### 6. Deploy to Firebase Hosting
+
+```bash
+cd frontend
+
+# Install Firebase CLI (if not installed)
+npm install -g firebase-tools
+
+# Login to Firebase
+firebase login
+
+# Initialize (select your project, choose "dist" as public directory)
+firebase init hosting
+
+# Build the app
+npm run build
+
+# Deploy
+firebase deploy --only hosting
+```
+
+Your app will be available at `https://your-project.web.app`
 
 ---
 
