@@ -2,34 +2,47 @@ version: '3.8'
 
 services:
   n8n:
-    image: n8nio/n8n:2.2.3
-    container_name: n8n-note-search
+    image: n8nio/n8n:latest
+    container_name: n8n-aggie
     restart: unless-stopped
     ports:
       - '5678:5678'
     environment:
       # Basic configuration
-      - N8N_HOST=localhost
+      - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
 
-      # Security (change in production!)
-      - N8N_BASIC_AUTH_ACTIVE=false
+      # Security - Enable one of these options:
+
+      # Option 1: Basic Auth (simple username/password)
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-false}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-}
+
+      # Option 2: n8n User Management (recommended for production)
+      - N8N_USER_MANAGEMENT_DISABLED=${N8N_USER_MANAGEMENT_DISABLED:-false}
+
+      # Encryption key for credentials (IMPORTANT: set this and keep it safe!)
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-}
 
       # Timezone
-      - GENERIC_TIMEZONE=UTC
-      - TZ=UTC
+      - GENERIC_TIMEZONE=${TZ:-UTC}
+      - TZ=${TZ:-UTC}
 
       # Execution settings
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
 
-      # Trello credentials (set these!)
-      - TRELLO_API_KEY=YOUR_TRELLO_API_KEY
-      - TRELLO_TOKEN=YOUR_TRELLO_TOKEN
+      # Trello credentials (used by workflow if configured to use env vars)
+      - TRELLO_API_KEY=${TRELLO_API_KEY:-}
+      - TRELLO_TOKEN=${TRELLO_TOKEN:-}
+
     volumes:
       - n8n_data:/home/node/.n8n
+      # Mount workflow for easy import
+      - ./n8n-workflow.json:/home/node/workflow.json:ro
     healthcheck:
       test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:5678/healthz']
       interval: 30s
@@ -40,10 +53,3 @@ services:
 volumes:
   n8n_data:
     driver: local
-
-# Production notes:
-# 1. Add HTTPS (use a reverse proxy like Traefik or nginx)
-# 2. Enable basic auth or use n8n's built-in auth
-# 3. Set proper WEBHOOK_URL to your public URL
-# 4. Consider using external database (Postgres) for production
-# 5. Set up proper backup for the n8n_data volume

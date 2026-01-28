@@ -24,8 +24,11 @@ A web-based search dashboard that queries notes across Google Drive, Trello, Gma
 
 ## Prerequisites
 
-- **n8n** v1.0+ (self-hosted or cloud) - tested with v2.2.3
-- **Node.js** v18+ and npm
+- **n8n** - One of the following:
+  - Use the included Docker Compose setup (see [Docker Setup](#docker-setup))
+  - Self-hosted n8n instance
+  - n8n Cloud account
+- **Node.js** v18+ and npm (for the frontend)
 - API credentials for the services you want to search:
   - Google Cloud project with Drive, Gmail, and Calendar APIs enabled
   - Microsoft Azure AD app for OneDrive
@@ -289,17 +292,135 @@ Some services failed but others succeeded. Check:
 
 ---
 
-## Docker Setup (Optional)
+## Docker Setup
 
-If you want to run n8n locally via Docker:
+This repo includes a Docker Compose configuration to run n8n locally.
 
+### Important: OAuth Requires a Real Domain
+
+Google and Microsoft OAuth **will not work with localhost**. The redirect URIs must be on a real, publicly accessible domain. Options:
+
+1. **Use a domain you own** - Point it to your server running n8n
+2. **Use a tunnel service** - [ngrok](https://ngrok.com), [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/), or similar
+3. **Use n8n Cloud** - They handle the OAuth redirect for you
+
+Example with ngrok:
 ```bash
+# Start n8n
 docker-compose up -d
+
+# In another terminal, expose it via ngrok
+ngrok http 5678
+
+# Use the ngrok URL (e.g., https://abc123.ngrok.io) for:
+# - WEBHOOK_URL in .env
+# - OAuth redirect URIs in Google Cloud / Azure
 ```
 
-n8n will be available at https://your-n8n-instance.com
+### Quick Start with Docker
 
-See `docker-compose.yml` for configuration options.
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Edit .env:
+#    - Set WEBHOOK_URL to your public URL (not localhost!)
+#    - Generate encryption key: openssl rand -hex 32
+
+# 3. Start n8n
+docker-compose up -d
+
+# 4. Access n8n at http://localhost:5678 (or your public URL)
+```
+
+### First-Time Setup
+
+1. Open http://localhost:5678
+2. Create your admin account (if using User Management)
+3. Import the workflow:
+   - The workflow file is mounted at `/home/node/workflow.json`
+   - Go to **Workflows** → **Import from File**
+   - Or use CLI: `docker exec -it n8n-aggie n8n import:workflow --input=/home/node/workflow.json`
+4. Set up credentials for each service (see [Credential Setup](#credential-setup))
+5. Activate the workflow
+
+### Security Options
+
+#### Option 1: n8n User Management (Recommended)
+
+This is enabled by default. On first access, you'll create an admin account.
+
+```env
+# In .env - this is the default
+N8N_USER_MANAGEMENT_DISABLED=false
+```
+
+#### Option 2: Basic Auth
+
+Simple username/password protection. Good for personal use.
+
+```env
+# In .env
+N8N_BASIC_AUTH_ACTIVE=true
+N8N_BASIC_AUTH_USER=admin
+N8N_BASIC_AUTH_PASSWORD=your-secure-password-here
+```
+
+#### Encryption Key (IMPORTANT!)
+
+Always set an encryption key to protect stored credentials:
+
+```bash
+# Generate a key
+openssl rand -hex 32
+
+# Add to .env
+N8N_ENCRYPTION_KEY=your-generated-key-here
+```
+
+**Save this key securely!** If you lose it, you'll need to re-enter all OAuth credentials.
+
+### Production Deployment
+
+For production, you should:
+
+1. **Use HTTPS** - Put n8n behind a reverse proxy (nginx, Traefik, Caddy)
+   ```env
+   N8N_PROTOCOL=https
+   N8N_HOST=n8n.yourdomain.com
+   WEBHOOK_URL=https://n8n.yourdomain.com/
+   ```
+
+2. **Set strong credentials** - Use a strong password or enable User Management
+
+3. **Backup the data volume** - Contains your workflows and encrypted credentials
+   ```bash
+   docker run --rm -v n8n_data:/data -v $(pwd):/backup alpine tar czf /backup/n8n-backup.tar.gz /data
+   ```
+
+4. **Keep the encryption key safe** - Store it in a password manager or secrets vault
+
+### Docker Commands
+
+```bash
+# Start n8n
+docker-compose up -d
+
+# View logs
+docker-compose logs -f n8n
+
+# Stop n8n
+docker-compose down
+
+# Import workflow via CLI
+docker exec -it n8n-aggie n8n import:workflow --input=/home/node/workflow.json
+
+# Restart after config changes
+docker-compose down && docker-compose up -d
+
+# Backup n8n data
+docker run --rm -v n8n_data:/data -v $(pwd):/backup alpine tar czf /backup/n8n-backup.tar.gz /data
+```
 
 ---
 
