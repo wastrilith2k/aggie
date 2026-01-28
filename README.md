@@ -143,6 +143,45 @@ firebase deploy --only hosting
 
 Your app will be available at `https://your-project.web.app`
 
+### 7. Automated Deployment with GitHub Actions (Optional)
+
+The repo includes a GitHub Actions workflow that automatically deploys to Firebase Hosting when you push to `main`.
+
+#### Set up GitHub Secrets
+
+Add these secrets in your repo's **Settings** → **Secrets and variables** → **Actions**:
+
+| Secret | Description |
+|--------|-------------|
+| `VITE_N8N_WEBHOOK_URL` | Your n8n webhook URL |
+| `VITE_FIREBASE_API_KEY` | Firebase API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase service account JSON (see below) |
+
+#### Create Firebase Service Account
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) → Your project
+2. Click the gear icon → **Project settings** → **Service accounts**
+3. Click **Generate new private key**
+4. Download the JSON file
+5. Copy the entire JSON content as the value for `FIREBASE_SERVICE_ACCOUNT` secret
+
+Or use the Firebase CLI:
+```bash
+firebase login:ci
+# Copy the token and use it to generate a service account
+```
+
+#### Trigger Deployment
+
+The workflow runs automatically when:
+- You push changes to `frontend/` on the `main` branch
+- You manually trigger it via **Actions** → **Deploy to Firebase Hosting** → **Run workflow**
+
 ---
 
 ## Credential Setup
