@@ -45,7 +45,7 @@
           "parameters": [
             {
               "name": "q",
-              "value": "=fullText contains '{{ $json.query }}' and trashed = false"
+              "value": "=fullText contains '{{ $json.query.replace(/'/g, \"\\\\'\" ) }}' and trashed = false"
             },
             {
               "name": "pageSize",
