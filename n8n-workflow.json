@@ -159,7 +159,7 @@
     },
     {
       "parameters": {
-        "url": "=https://graph.microsoft.com/v1.0/me/drive/root/search(q='{{ encodeURIComponent($json.query) }}')",
+        "url": "=https://graph.microsoft.com/v1.0/me/drive/root/search(q='{{ encodeURIComponent($json.query.replace(/'/g, \"''\")) }}')",
         "authentication": "genericCredentialType",
         "genericAuthType": "oAuth2Api",
         "sendQuery": true,
