@@ -8,11 +8,11 @@ import {
 } from 'firebase/auth';
 import { auth } from './config';
 
-// Allowed emails - add your email(s) here
-// Leave empty to allow any authenticated user
-const ALLOWED_EMAILS: string[] = [
-  'wastrilith@gmail.com',
-];
+// Allowed emails - configured via VITE_ALLOWED_EMAILS environment variable
+// Comma-separated list of emails, or leave empty to allow any authenticated user
+const ALLOWED_EMAILS: string[] = import.meta.env.VITE_ALLOWED_EMAILS
+  ? import.meta.env.VITE_ALLOWED_EMAILS.split(',').map((email: string) => email.trim())
+  : [];
 
 interface AuthContextType {
   user: User | null;

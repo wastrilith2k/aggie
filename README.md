@@ -2,6 +2,8 @@
 
 A unified search dashboard that queries Google Drive, Trello, Gmail, OneDrive, and Google Calendar simultaneously.
 
+[![Demo Video](https://img.youtube.com/vi/Fhe7XXuelEU/maxresdefault.jpg)](https://youtu.be/Fhe7XXuelEU)
+
 ```
 ┌─────────────────┐                           ┌─────────────────┐
 │                 │    POST /webhook/search   │                 │
@@ -107,15 +109,13 @@ The repo includes GitHub Actions for automatic deployment on push. Add these sec
 
 ## Access Control
 
-To restrict access to specific users, edit `frontend/src/firebase/AuthContext.tsx`:
+To restrict access to specific users, set the `VITE_ALLOWED_EMAILS` environment variable in `frontend/.env`:
 
-```typescript
-const ALLOWED_EMAILS: string[] = [
-  'allowed-user@gmail.com',
-];
+```bash
+VITE_ALLOWED_EMAILS=user@gmail.com,another@example.com
 ```
 
-Leave empty to allow any authenticated Google user.
+Multiple emails can be comma-separated. Leave empty or omit to allow any authenticated Google user.
 
 ---
 
