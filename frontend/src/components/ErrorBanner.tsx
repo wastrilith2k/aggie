@@ -32,10 +32,10 @@ export function ErrorBanner({ errors }: ErrorBannerProps) {
           <ul className="mt-2 space-y-1">
             {errors.map((error, idx) => (
               <li
-                key={`${error.source}-${idx}`}
+                key={`${error.service}-${idx}`}
                 className="text-sm text-amber-700 dark:text-amber-300"
               >
-                <span className="font-medium">{error.source}:</span>{' '}
+                <span className="font-medium">{error.service}:</span>{' '}
                 {error.message}
               </li>
             ))}

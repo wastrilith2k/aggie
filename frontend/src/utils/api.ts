@@ -1,41 +1,80 @@
-import type { SearchRequest, SearchResponse } from '../types/search.types';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase/config';
+import type {
+  SearchResponse,
+  BackendSearchSource,
+} from '../types/search.types';
 
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
-
-if (!N8N_WEBHOOK_URL) {
-  console.warn(
-    'VITE_N8N_WEBHOOK_URL is not set. Please configure your .env file.'
-  );
+interface SearchRequest {
+  query: string;
+  accountId: string;
 }
 
+interface BackendSearchResult {
+  source: BackendSearchSource;
+  title: string;
+  snippet: string;
+  url: string;
+  date: string;
+  relevance: number;
+  metadata: Record<string, unknown>;
+}
+
+interface BackendSearchResponse {
+  success: boolean;
+  query: string;
+  totalResults: number;
+  errors: Array<{
+    service: BackendSearchSource;
+    message: string;
+    code?: string;
+  }>;
+  hasErrors: boolean;
+  results: BackendSearchResult[];
+  message?: string;
+}
+
+// Map backend source IDs to display names
+const SOURCE_NAMES: Record<BackendSearchSource, string> = {
+  'google-drive': 'Google Drive',
+  'gmail': 'Gmail',
+  'google-calendar': 'Google Calendar',
+  'onedrive': 'OneDrive',
+  'trello': 'Trello',
+};
+
 /**
- * Performs a search against the n8n webhook endpoint
- * @param request - The search request containing the query
+ * Performs a search via Firebase Cloud Functions
+ * @param request - The search request containing query and accountId
  * @returns Promise with search results
  */
 export async function performSearch(
   request: SearchRequest
 ): Promise<SearchResponse> {
-  if (!N8N_WEBHOOK_URL) {
-    throw new Error(
-      'n8n webhook URL not configured. Please set VITE_N8N_WEBHOOK_URL in your .env file.'
-    );
-  }
+  const searchFn = httpsCallable<SearchRequest, BackendSearchResponse>(
+    functions,
+    'search'
+  );
 
-  const response = await fetch(N8N_WEBHOOK_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
+  const result = await searchFn(request);
+  const data = result.data;
 
-  if (!response.ok) {
-    throw new Error(`Search failed: ${response.status} ${response.statusText}`);
-  }
+  // Transform backend response to frontend format
+  // Map source IDs to display names
+  const transformedResults = data.results.map(result => ({
+    ...result,
+    source: SOURCE_NAMES[result.source] as SearchResponse['results'][0]['source'],
+    metadata: result.metadata,
+  }));
 
-  const data: SearchResponse = await response.json();
-  return data;
+  return {
+    success: data.success,
+    query: data.query,
+    totalResults: data.totalResults,
+    errors: data.errors,
+    hasErrors: data.hasErrors,
+    results: transformedResults,
+  };
 }
 
 /** Local storage key for recent searches */

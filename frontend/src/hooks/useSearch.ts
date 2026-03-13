@@ -13,6 +13,7 @@ import {
   clearRecentSearches,
   type StoredRecentSearch,
 } from '../utils/api';
+import { useAccount } from '../contexts/AccountContext';
 
 /** All available sources in display order */
 const SOURCE_ORDER: SearchSource[] = [
@@ -80,6 +81,7 @@ interface UseSearchReturn {
 
 export function useSearch(): UseSearchReturn {
   const queryClient = useQueryClient();
+  const { account } = useAccount();
   const [query, setQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTime, setSearchTime] = useState<number | null>(null);
@@ -101,10 +103,17 @@ export function useSearch(): UseSearchReturn {
     error,
     isFetching,
   } = useQuery<SearchResponse, Error>({
-    queryKey: ['search', searchQuery],
+    queryKey: ['search', searchQuery, account?.id],
     queryFn: async () => {
+      if (!account?.id) {
+        throw new Error('No account selected');
+      }
+
       const startTime = performance.now();
-      const result = await performSearch({ query: searchQuery });
+      const result = await performSearch({
+        query: searchQuery,
+        accountId: account.id,
+      });
       const endTime = performance.now();
       setSearchTime(endTime - startTime);
 
@@ -116,7 +125,7 @@ export function useSearch(): UseSearchReturn {
 
       return result;
     },
-    enabled: searchQuery.length > 0,
+    enabled: searchQuery.length > 0 && !!account?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
   });

@@ -6,6 +6,23 @@ export type SearchSource =
   | 'OneDrive'
   | 'Google Calendar';
 
+/** Backend source identifiers (lowercase with dashes) */
+export type BackendSearchSource =
+  | 'google-drive'
+  | 'gmail'
+  | 'google-calendar'
+  | 'onedrive'
+  | 'trello';
+
+/** Map backend source IDs to display names */
+export const SOURCE_DISPLAY_NAMES: Record<BackendSearchSource, SearchSource> = {
+  'google-drive': 'Google Drive',
+  'gmail': 'Gmail',
+  'google-calendar': 'Google Calendar',
+  'onedrive': 'OneDrive',
+  'trello': 'Trello',
+};
+
 /** Metadata specific to each source type */
 export interface GoogleDriveMetadata {
   fileType?: string;
@@ -56,8 +73,9 @@ export interface SearchResult {
 
 /** Error from a specific service */
 export interface ServiceError {
-  source: SearchSource;
+  service: BackendSearchSource;
   message: string;
+  code?: string;
 }
 
 /** Response from the n8n search webhook */

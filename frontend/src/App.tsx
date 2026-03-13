@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Settings, AlertCircle } from 'lucide-react';
 import {
   SearchBar,
   ResultsGroup,
@@ -12,6 +13,8 @@ import {
 import { Login } from './components/Login';
 import { useSearch } from './hooks/useSearch';
 import { AuthProvider, useAuth } from './firebase/AuthContext';
+import { AccountProvider, useAccount } from './contexts/AccountContext';
+import { SettingsPage } from './pages/SettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,8 +25,15 @@ const queryClient = new QueryClient({
   },
 });
 
-function SearchDashboard() {
+type Page = 'search' | 'settings';
+
+interface SearchDashboardProps {
+  onNavigate: (page: Page) => void;
+}
+
+function SearchDashboard({ onNavigate }: SearchDashboardProps) {
   const { user, signOut } = useAuth();
+  const { services, loading: accountLoading } = useAccount();
   const {
     query,
     setQuery,
@@ -75,7 +85,7 @@ function SearchDashboard() {
             window.open(flatResults[selectedIndex].url, '_blank');
           }
           break;
-        case '/':
+        case '/': {
           // Focus search
           e.preventDefault();
           const searchInput = document.querySelector<HTMLInputElement>(
@@ -83,6 +93,7 @@ function SearchDashboard() {
           );
           searchInput?.focus();
           break;
+        }
       }
     },
     [selectedIndex, flatResults, setSelectedIndex]
@@ -124,6 +135,15 @@ function SearchDashboard() {
             <span className="hidden sm:inline text-xs text-primary-400 dark:text-primary-500">
               to search
             </span>
+            <button
+              onClick={() => onNavigate('settings')}
+              className="p-2 text-primary-500 hover:text-primary-700
+                         dark:text-primary-400 dark:hover:text-primary-200
+                         transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
             <ThemeToggle />
             {user && (
               <div className="flex items-center gap-2">
@@ -149,6 +169,29 @@ function SearchDashboard() {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {/* No services connected banner */}
+        {!accountLoading && services.length === 0 && (
+          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-800 dark:text-amber-200 font-medium">
+                  No services connected
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  Connect Google, Microsoft, or Trello to start searching your notes.
+                </p>
+                <button
+                  onClick={() => onNavigate('settings')}
+                  className="mt-2 text-sm text-amber-600 dark:text-amber-400 hover:underline font-medium"
+                >
+                  Go to Settings →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Search bar */}
         <SearchBar
           query={query}
@@ -248,6 +291,40 @@ function SearchDashboard() {
   );
 }
 
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState<Page>('search');
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/settings') {
+        setCurrentPage('settings');
+      } else {
+        setCurrentPage('search');
+      }
+    };
+
+    // Set initial state from URL
+    handlePopState();
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = useCallback((page: Page) => {
+    setCurrentPage(page);
+    const path = page === 'settings' ? '/settings' : '/';
+    window.history.pushState({}, '', path);
+  }, []);
+
+  if (currentPage === 'settings') {
+    return <SettingsPage onBack={() => navigate('search')} />;
+  }
+
+  return <SearchDashboard onNavigate={navigate} />;
+}
+
 function AuthenticatedApp() {
   const { user, loading, isAuthorized } = useAuth();
 
@@ -263,7 +340,11 @@ function AuthenticatedApp() {
     return <Login />;
   }
 
-  return <SearchDashboard />;
+  return (
+    <AccountProvider>
+      <AppContent />
+    </AccountProvider>
+  );
 }
 
 export default function App() {

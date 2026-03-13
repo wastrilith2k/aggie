@@ -1,0 +1,90 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAccountOwner(accountId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/accounts/$(accountId)).data.ownerId == request.auth.uid;
+    }
+
+    function isAccountMember(accountId) {
+      return isAuthenticated() &&
+        request.auth.uid in get(/databases/$(database)/documents/accounts/$(accountId)).data.memberIds;
+    }
+
+    // Users collection
+    // Users can read and write their own document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Accounts collection
+    match /accounts/{accountId} {
+      // Members can read the account
+      allow read: if isAccountMember(accountId);
+
+      // Only the owner can update the account (excluding connectedServices)
+      allow update: if isAccountOwner(accountId);
+
+      // Only authenticated users can create accounts (they become the owner)
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerId == request.auth.uid;
+
+      // Only owner can delete
+      allow delete: if isAccountOwner(accountId);
+
+      // Connected services subcollection
+      // IMPORTANT: Only writable via Cloud Functions (admin SDK)
+      // Clients can only read if they are members
+      match /connectedServices/{serviceId} {
+        allow read: if isAccountMember(accountId);
+        // No write allowed from client - only Cloud Functions can modify
+        allow write: if false;
+      }
+
+      // Members subcollection
+      match /members/{memberId} {
+        // Members can read the member list
+        allow read: if isAccountMember(accountId);
+
+        // Only owner can add/remove members (except Cloud Functions)
+        allow write: if isAccountOwner(accountId);
+      }
+    }
+
+    // Invitations collection
+    match /invitations/{invitationId} {
+      // Inviter can read their sent invitations
+      // Invitee can read invitations sent to them
+      allow read: if isAuthenticated() && (
+        resource.data.inviterEmail == request.auth.token.email ||
+        resource.data.inviteeEmail == request.auth.token.email
+      );
+
+      // Only account owners can create invitations (via Functions preferred)
+      allow create: if isAuthenticated() &&
+        isAccountOwner(request.resource.data.accountId) &&
+        request.resource.data.inviterEmail == request.auth.token.email;
+
+      // Invitee can update to accept/decline
+      allow update: if isAuthenticated() &&
+        resource.data.inviteeEmail == request.auth.token.email &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status in ['accepted', 'declined'];
+
+      // Inviter can delete pending invitations
+      allow delete: if isAuthenticated() &&
+        resource.data.inviterEmail == request.auth.token.email &&
+        resource.data.status == 'pending';
+    }
+  }
+}
